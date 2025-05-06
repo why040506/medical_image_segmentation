@@ -34,4 +34,6 @@ class Args:
     """num_workers used in dataloader"""
     log_dir:str=""
     '''the log dir. will be set when running'''
+    net:str="dpt"
+    """the used module.  'unet' or 'dpt'   """
 

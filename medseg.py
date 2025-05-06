@@ -17,7 +17,7 @@ from data import Jointrandomcrop,Jointvflip,JointTransforms,JointPILToTensor,Joi
 from utils import  get_model_size,calculate_iou,visual_mask_comparison
 from loss_func import DiceLoss
 from args import  Args
-
+from ViTnet import ViT
 
 
 # ====================hyperparameter setting====================
@@ -59,8 +59,10 @@ val_dataloader=DataLoader(val_dataset,batch_size=args.batchsize,shuffle=False,nu
 
 
 # ====================set the net and the loss and the optimizer====================
-
-model=UNET(args)
+if args.net=='dpt':
+    model=ViT()
+elif args.net=='unet':
+    model=UNET(args)
 print(f"model size is: {get_model_size(model)}")
 model=model.to(args.device)
 bceloss=nn.BCEWithLogitsLoss()

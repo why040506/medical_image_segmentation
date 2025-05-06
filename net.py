@@ -11,20 +11,23 @@ class ResBlock(nn.Module):
     The basic block used to build unet.
     Using batchnorm by default.
     """
-    def __init__(self,in_channels,out_channels,num):
+    def __init__(self,in_channels,out_channels,num,p=0.1):
         super().__init__()
+        self.dropout=nn.Dropout(p=p)
         self.m=nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(in_channels,out_channels,kernel_size=3,padding=1),
                 nn.BatchNorm2d(out_channels),
-                nn.ReLU()
+                nn.ReLU(),
+                self.dropout
             )
         ])
         self.m.extend([
             nn.Sequential(
                 nn.Conv2d(out_channels,out_channels,kernel_size=3,padding=1),
                 nn.BatchNorm2d(out_channels),
-                nn.ReLU()
+                nn.ReLU(),
+                self.dropout
             )
         for _ in range(num-1)])
         self.skip=nn.Identity() if in_channels==out_channels else nn.Conv2d(in_channels,out_channels,kernel_size=1)
