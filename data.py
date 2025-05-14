@@ -141,8 +141,6 @@ class JointPILToTensor:
     def __call__(self,img,segmentation):
         img=TF.pil_to_tensor(img).to(dtype=torch.float32)
         segmentation=TF.pil_to_tensor(segmentation).to(dtype=torch.float32)
-        if segmentation.max()==255:
-            segmentation=segmentation/255
         min_val = img.min()
         max_val = img.max()
         img = (img - min_val) / (max_val - min_val + 1e-6)

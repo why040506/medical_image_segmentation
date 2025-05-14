@@ -14,7 +14,7 @@ class Args:
     """the wandb's project name"""
     learning_rate:float=2.5e-4
     """the learning rate of the optimizer"""
-    epochs:int=4
+    epochs:int=12
     """the epochs of the experiment"""
     batchsize:int=4
     """the batchsize of one train iteration"""
@@ -36,4 +36,6 @@ class Args:
     '''the log dir. will be set when running'''
     net:str="dpt"
     """the used module.  'unet' or 'dpt'   """
+    class_reduction:bool=True
+    """if True, the dice loss will first be averaged in class, then in batch."""
 

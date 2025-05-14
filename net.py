@@ -87,7 +87,7 @@ class UNET(nn.Module):
         self.unsqueezes.append(nn.Sequential(
             ResBlock(args.channel_list[0]*2,args.channel_list[0],2),
             nn.Sequential(
-                nn.Conv2d(args.channel_list[0], 1, kernel_size=3, padding=1),
+                nn.Conv2d(args.channel_list[0], 3, kernel_size=3, padding=1),
             )
         ))
 
@@ -116,5 +116,5 @@ class UNET(nn.Module):
             x=up(x)
             x=torch.cat((x,res[-(idx+1)]),dim=1)
             x=unsqueeze(x)
-        x=rearrange(x,"b c h w -> (b c) h w")
+
         return x

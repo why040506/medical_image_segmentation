@@ -155,7 +155,7 @@ class ConvDecoder(nn.Module):
                 ResBlock(emb_size//(2**i),emb_size//(2**(i+2)),3,drop_p),
                 nn.ConvTranspose2d(emb_size//(2**(i+2)),emb_size//(2**(i+2)),kernel_size=2,stride=2)
             ))
-        self.final_layer=ResBlock(emb_size//(2**(self.num_features+1)),1,3,drop_p)
+        self.final_layer=ResBlock(emb_size//(2**(self.num_features+1)),3,3,drop_p)
 
 
 
@@ -204,5 +204,5 @@ class ViT(nn.Module):
             if i+1 in self.features_indices:
                 features.append(tokens)
         out=self.convdecoder(features)
-        out=rearrange(out,'b c h w-> (b c) h w')
+
         return out

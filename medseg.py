@@ -8,14 +8,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from  einops import rearrange
-
+from triton.language import dtype
 
 # ====================custom class and function====================
 
 from net import UNET
 from data import Jointrandomcrop,Jointvflip,JointTransforms,JointPILToTensor,Jointhflip
-from utils import  get_model_size,calculate_iou,visual_mask_comparison
-from loss_func import DiceLoss
+from utils import  get_model_size,calculate_iou,visual_mask_comparison,contains_experiments
+from loss_func import DiceLoss,DiceLoss_class_reduction
 from args import  Args
 from ViTnet import ViT
 
@@ -37,6 +37,7 @@ if args.track==True:
         config=args.__dict__,
         save_code=True
     )
+    wandb.run.log_code(".",exclude_fn=contains_experiments)
 
 
 # ====================prepare train data and eval data====================
@@ -65,8 +66,11 @@ elif args.net=='unet':
     model=UNET(args)
 print(f"model size is: {get_model_size(model)}")
 model=model.to(args.device)
-bceloss=nn.BCEWithLogitsLoss()
-diceloss=DiceLoss()
+celoss=nn.CrossEntropyLoss()
+if args.class_reduction:
+    diceloss=DiceLoss_class_reduction()
+else:
+    diceloss=DiceLoss()
 optimizer=torch.optim.Adam(params=model.parameters(),lr=args.learning_rate,)
 
 # ====================train start!====================
@@ -81,10 +85,10 @@ for epoch in range(1,args.epochs+1):
 
     for i, (img,segmentation) in enumerate(train_progress):
         img=img.to(device=args.device,dtype=torch.float32)
-        segmentation=segmentation.to(device=args.device,dtype=torch.float32)
+        segmentation=segmentation.to(device=args.device,dtype=torch.long)
         optimizer.zero_grad()
         pred=model(img)
-        loss=bceloss(pred, segmentation)+diceloss(pred,segmentation)
+        loss= celoss(pred, segmentation) + diceloss(pred, segmentation)
         loss.backward()
         optimizer.step()
         train_loss+=loss.item()
@@ -93,26 +97,27 @@ for epoch in range(1,args.epochs+1):
 
         # ====================log the metrics after 10 batchs====================
 
-        if i%10==9:
-            with torch.no_grad():
-                iou=calculate_iou(pred=F.sigmoid(pred),target=segmentation,threshold=args.threshold)
+
+        with torch.no_grad():
+            ious=calculate_iou(pred=pred,target=segmentation)
+            for id,iou in enumerate(ious):
                 if iou==-1:
-                    print("no mask!")
+                    print(id,"no mask!")
                 else:
-                    print(f"the iou is: {iou}")
+                    print(f"the{id} iou is: {iou}")
                     if args.track:
                         wandb.log({
                             "epoch": epoch-1+i/len(train_dataloader),
                             "train_loss": train_loss/(i+1),
-                            "train_iou":iou,
+                            f"{id}train_iou":iou,
                         })
 
-                # ====================save the check point after 500 batchs====================
+            # ====================save the check point after 500 batchs====================
 
-                if i%500==499:
-                    print("save check point")
-                    torch.save(model.state_dict(), f"{args.log_dir}/epoch_{epoch-1}_iter_{i}.pth")
-                    print("checkpoint save down")
+            if i%500==499:
+                print("save check point")
+                torch.save(model.state_dict(), f"{args.log_dir}/epoch_{epoch-1}_iter_{i}.pth")
+                print("checkpoint save down")
 
 
     print(f"epoch: {epoch} train finished!")
@@ -123,33 +128,36 @@ for epoch in range(1,args.epochs+1):
     model.eval()
     eval_progress=tqdm(val_dataloader,desc=f"epoch:{epoch},eval iteration")
     eval_loss=0
-    ious=[]
+    allious=[[],[],[]]
     for i,(img,segmentation) in enumerate(eval_progress):
-        img=img.to(args.device)
-        segmentation=segmentation.to(args.device)
+        img = img.to(device=args.device, dtype=torch.float32)
+        segmentation = segmentation.to(device=args.device, dtype=torch.long)
         with torch.no_grad():
             pred=model(img)
-            loss=bceloss(pred, segmentation)+diceloss(pred,segmentation)
+            loss= celoss(pred, segmentation) + diceloss(pred, segmentation)
             eval_loss+=loss.item()
             eval_progress.set_postfix(loss=f"{eval_loss/(i+1)}")
 
             # ====================log the metrics after 10 batchs(not update to wandb)====================
 
             if i%10==9:
-                iou=calculate_iou(pred=F.sigmoid(pred),target=segmentation,threshold=args.threshold)
-                if iou==-1:
-                    print("no iou!")
-                else:
-                    ious.append(iou)
-                    print(f"the iou is: {iou}")
-                visual_mask_comparison(img,F.sigmoid(pred),segmentation,epoch,i,threshold=args.threshold,logdir=args.log_dir)
+                ious=calculate_iou(pred=pred,target=segmentation)
+                for id,iou in enumerate(ious):
+
+                    if iou==-1:
+                        print(id,"no iou!")
+                    else:
+                        allious[id].append(iou)
+                        print(f"the{id} iou is: {iou}")
+                visual_mask_comparison(img,pred,segmentation,epoch,i,logdir=args.log_dir)
 
     # ====================log the metrics after whole val data====================
     if args.track:
-        wandb.log({
-            "epoch":epoch,
-            "eval_loss": eval_loss/len(val_dataloader),
-            "eval_iou":np.mean(ious).item()
-        })
+        for id in range(3):
+            wandb.log({
+                "epoch":epoch,
+                f"eval_loss": eval_loss/len(val_dataloader),
+                f"{id}eval_iou":np.mean(allious[id]).item()
+            })
     print(f"epoch: {epoch} eval finished!")
 

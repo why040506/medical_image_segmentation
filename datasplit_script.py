@@ -33,7 +33,7 @@ def save_nii_slices_worker(args):
         volume_slice = volume_slice.astype(np.uint8)
 
         # 获取分割切片
-        seg_slice = (seg_data[:, :, i]*255).astype(np.uint8)
+        seg_slice = (seg_data[:, :, i]).astype(np.uint8)
 
         # 转换为PIL图像
         volume_img_slice = Image.fromarray(volume_slice, mode="L")

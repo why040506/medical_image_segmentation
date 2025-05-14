@@ -3,7 +3,7 @@ import os
 import numpy as np
 import cv2
 from einops import rearrange
-
+import torch.nn.functional as F
 # 获取模型总内存大小（MB或GB）
 def get_model_size(model):
     """
@@ -30,26 +30,39 @@ def get_model_size(model):
 
 
 # calculate the iou
-def calculate_iou(pred, target, threshold=0.5):
+def calculate_iou(pred, target):
     '''
 
-    :param pred: the output of the model (after sigmoid)
+    :param pred: the output of the model
     :param target: the true mask
-    :param threshold: the threshold of the pred mask
     :return: iou
     '''
-    pred_binary = (pred > threshold).float()
-    pred_binary=rearrange(pred_binary,"b h w -> b (h w)")
-    target=rearrange(target,"b h w -> b (h w)")
-    intersection = (pred_binary * target).sum(dim=1)
-    union = pred_binary.sum(dim=1) + target.sum(dim=1) - intersection
-    num_non_zeros=(target.sum(dim=1)!=0.).sum().item()
-    if num_non_zeros ==0:
-        return -1
-    return ((intersection) / (union+1e-6)).sum().item()/num_non_zeros
+
+    # Get predicted class (argmax)
+    pred=F.softmax(pred,dim=1)
+    pred_class = pred.argmax(dim=1)
+    # Reshape tensors
+    pred_class = rearrange(pred_class, "b h w -> b (h w)")
+    target = rearrange(target, "b h w -> b (h w)")
+    # Number of classes (from model output channels)
+    num_classes = pred.shape[1]
+    ious=[]
+    for cls in range(num_classes):
+        pred_mask=(pred_class==cls).float()
+        target_mask=(target==cls).float()
+        intersection=(pred_mask*target_mask).sum(dim=1)
+        union=pred_mask.sum(dim=1)+target_mask.sum(dim=1)-intersection
+        valid_samples=(target_mask.sum(dim=1)>0).sum().item()
+        if valid_samples==0:
+            class_iou=-1
+        else:
+            class_iou=(intersection/(union+1e-6)).sum().item()/valid_samples
+        ious.append(class_iou)
+
+    return ious
 
 
-def visual_mask_comparison(imgs, preds, targets,epoch,i, threshold=0.5, logdir=None):
+def visual_mask_comparison(imgs, preds, targets,epoch,i, logdir=None):
     """
     compare the pred mask and the target mask, and concat the comparision with the img.
     :param imgs: The original img, the shape is [B, 1, H, W]
@@ -63,8 +76,16 @@ def visual_mask_comparison(imgs, preds, targets,epoch,i, threshold=0.5, logdir=N
     if logdir is not None:
         vis_dir=os.path.join(logdir,"visual",f"{epoch}")
         os.makedirs(vis_dir,exist_ok=True)
-    preds_binary=(preds > threshold).float()
+    preds_probs=F.softmax(preds,dim=1)
+    preds_class=preds_probs.argmax(dim=1)
     batch_size=imgs.shape[0]
+    # 定义颜色映射（每个类别一种颜色）
+
+    color_map = {
+        0: [0, 0, 0],  # 背景 - 黑色
+        1: [255, 0, 0],  # 类别1 - 红色
+        2: [0, 255, 0],  # 类别2 - 绿色
+    }
 
     for b in range(batch_size):
         img=imgs[b].detach().cpu().permute(1,2,0).numpy()
@@ -72,20 +93,27 @@ def visual_mask_comparison(imgs, preds, targets,epoch,i, threshold=0.5, logdir=N
             img=(img*255).astype(np.uint8)
         if img.shape[2]==1:
             img=cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
-        pred_mask=preds_binary[b].detach().cpu().numpy()
+        pred_mask=preds_class[b].detach().cpu().numpy()
         target_mask=targets[b].detach().cpu().numpy()
         h,w=pred_mask.shape
+        pred_vis=np.zeros((h,w,3),dtype=np.uint8)
+        target_vis=np.zeros((h,w,3),dtype=np.uint8)
+        for cls in range(3):
+            pred_vis[pred_mask==cls]=color_map[cls]
+            target_vis[target_mask==cls]=color_map[cls]
+
         comp_mask=np.zeros((h,w,3),dtype=np.uint8)
 
-        # TP
-        comp_mask[(pred_mask==1)&(target_mask==1)]=[0,255,0]
-        # FP
-        comp_mask[(pred_mask==1)&(target_mask==0)]=[255,0,0]
-        # FN
-        comp_mask[(pred_mask==0)&(target_mask==1)]=[0,0,255]
+        #comp_mask[(pred_mask==target_mask)]=[0,0,255]
+        comp_mask[(pred_mask!=target_mask)]=[255,0,0]
 
 
         # Concat the original img to the comp_mask
-        comp_img=np.hstack((img,comp_mask))
+        comp_img=np.hstack((img,pred_vis,target_vis,comp_mask))
         if logdir is not None:
             cv2.imwrite(os.path.join(vis_dir,f"comp_batch_{i}_{b}.png"),cv2.cvtColor(comp_img,cv2.COLOR_RGB2BGR))
+
+def contains_experiments(path:str)->bool:
+    norm_path=os.path.normpath(path)
+    parts=norm_path.split(os.sep)
+    return "experiments" in parts
