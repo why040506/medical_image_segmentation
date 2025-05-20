@@ -58,6 +58,11 @@ python medseg.py
 
 Training logs and checkpoints will be automatically saved to Weights & Biases (wandb) after each experiment. Please ensure that you are logged into your wandb account before starting the experiment.
 
+## Resume Training
+
+This project supports resuming from checkpoints!
+
+To resume, set the 'resume' variable in `args.py` to the path of the checkpoint you wish to continue from.
 
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbMjEzNTI5MDU0OV19

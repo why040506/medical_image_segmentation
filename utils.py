@@ -1,9 +1,14 @@
-
+import copy
 import os
 import numpy as np
 import cv2
+import torch
 from einops import rearrange
 import torch.nn.functional as F
+import torch.nn as nn
+from torch.optim import lr_scheduler
+
+
 # 获取模型总内存大小（MB或GB）
 def get_model_size(model):
     """
@@ -117,3 +122,54 @@ def contains_experiments(path:str)->bool:
     norm_path=os.path.normpath(path)
     parts=norm_path.split(os.sep)
     return "experiments" in parts
+
+
+def get_lr_scheduler(args,optimizer,train_dataloader):
+    if args.lr_schedule == "cos_anneling_warmstart":
+        scheduler = lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer,
+            T_0=len(train_dataloader),
+            T_mult=2,
+            eta_min=args.learning_rate_min
+        )
+    elif args.lr_schedule == "warmup_cos_anneling":
+        warmup_iters = int(0.1 * (args.epochs * len(train_dataloader)))
+        warmup_schuduler = lr_scheduler.LinearLR(
+            optimizer,
+            start_factor=args.learning_rate_min / args.learning_rate,
+            end_factor=1.,
+            total_iters=warmup_iters
+        )
+        cosine_scheduler = lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=args.epochs * len(train_dataloader) - warmup_iters,
+            eta_min=args.learning_rate_min
+        )
+        scheduler = lr_scheduler.SequentialLR(
+            optimizer,
+            schedulers=[warmup_schuduler, cosine_scheduler],
+            milestones=[warmup_iters]
+        )
+    else:
+        scheduler = None
+    return scheduler
+
+class ModelEMA:
+    def __init__(self,model:nn.Module,decay=0.999):
+        self.ema_model=copy.deepcopy(model).to(next(model.parameters()).device)
+        self.ema_model.eval()
+        for p in self.ema_model.parameters():
+            p.requires_grad_(False)
+        self.decay=decay
+    def update(self,model):
+        with torch.no_grad():
+            msd=model.state_dict()
+            for k,ema_v in self.ema_model.state_dict().items():
+                model_v=msd[k].detach()
+                if torch.is_floating_point(model_v):
+                    ema_v.copy_(ema_v*self.decay+(1.-self.decay)*model_v)
+                else:
+                    ema_v.copy_(model_v)
+
+
+
