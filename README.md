@@ -19,7 +19,7 @@ cd medical_image_segmentation
 Set up the project environment with the following commands:
 
 ```bash
-conda create -n medicalimg python=3.10
+conda create -n medicalimg python=3.12
 conda activate medicalimg
 pip install -r requirements.txt
 ```
@@ -46,7 +46,7 @@ The general procedure to obtain the dataset is as follows:
 You can modify the hyperparameters by editing the `args.py` file.
 
 ## Training
-
+(You can only start the training after preparing the data!)
 To train the segmentation network, execute the following command:
 
 ```bash

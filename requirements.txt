@@ -1,9 +1,10 @@
 einops==0.8.1
-matplotlib==3.10.1
 nibabel==5.3.2
-numpy==2.2.5
-opencv_python==4.10.0.84
-Pillow==11.2.1
-torch==2.4.0.post301
-torchvision==0.19.0a0+1713e84
-tqdm==4.66.5
+numpy==1.26.4
+Pillow==11.0.0
+torch==2.5.0
+torchvision==0.20.0
+tqdm==4.67.1
+wandb==0.19.11
+opencv-python==4.11.0.86
+matplotlib==3.10.3

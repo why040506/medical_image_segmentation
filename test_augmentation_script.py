@@ -1,4 +1,4 @@
-from data import *
+
 
 
 def plot_grayscale(img, title=None, cmap='gray'):
