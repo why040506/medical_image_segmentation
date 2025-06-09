@@ -79,8 +79,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <table>
   <tbody>
     <tr>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Fireflyyy04"><img src="https://avatars.githubusercontent.com/u/215456877?v=4?s=100" width="100px;" alt="Fireflyyy04"/><br /><sub><b>Fireflyyy04</b></sub></a><br /><a href="https://github.com/abstcol/medical_image_segmentation/commits?author=Fireflyyy04" title="Code">💻</a></td>
-      <td align="center" valign="top" width="14.28%"><a href="https://github.com/why040506"><img src="https://avatars.githubusercontent.com/u/165774680?v=4?s=100" width="100px;" alt="why040506"/><br /><sub><b>why040506</b></sub></a><br /><a href="#ideas-why040506" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Fireflyyy04"><img src="https://avatars.githubusercontent.com/u/215456877?v=4?s=100" width="100px;" alt="Fireflyyy04"/><br /><sub><b>Fireflyyy04</b></sub></a><br /><a href="#ideas-Fireflyyy04" title="Ideas, Planning, & Feedback">🤔</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/why040506"><img src="https://avatars.githubusercontent.com/u/165774680?v=4?s=100" width="100px;" alt="why040506"/><br /><sub><b>why040506</b></sub></a><br /><a href="https://github.com/abstcol/medical_image_segmentation/commits?author=why040506" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
