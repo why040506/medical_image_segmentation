@@ -1,4 +1,7 @@
 
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-2-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 
 # Medical Image Segmentation Practice
@@ -67,3 +70,31 @@ To resume, set the 'resume' variable in `args.py` to the path of the checkpoint 
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbMjEzNTI5MDU0OV19
 -->
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Fireflyyy04"><img src="https://avatars.githubusercontent.com/u/215456877?v=4?s=100" width="100px;" alt="Fireflyyy04"/><br /><sub><b>Fireflyyy04</b></sub></a><br /><a href="https://github.com/abstcol/medical_image_segmentation/commits?author=Fireflyyy04" title="Code">💻</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/why040506"><img src="https://avatars.githubusercontent.com/u/165774680?v=4?s=100" width="100px;" alt="why040506"/><br /><sub><b>why040506</b></sub></a><br /><a href="#ideas-why040506" title="Ideas, Planning, & Feedback">🤔</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
